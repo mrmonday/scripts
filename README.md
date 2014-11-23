@@ -4,7 +4,7 @@ There are some scripts here, probably of little use to anyone.
 
 ## The Scripts
 
- * volume - requires awesome wm
+ * [volume](volume) - requires awesome wm
 
     ```zsh
     ./volume up   # Turn volume up and notify
