@@ -1,0 +1,45 @@
+#!/bin/zsh
+
+LOW_ICON=/usr/share/icons/Adwaita/48x48/status/audio-volume-low.png
+MEDIUM_ICON=/usr/share/icons/Adwaita/48x48/status/audio-volume-medium.png
+HIGH_ICON=/usr/share/icons/Adwaita/48x48/status/audio-volume-high.png
+WID_FILE=/tmp/volume-notify.wid
+
+function notify() {
+    local volume=$(amixer -c 0 sget 'Master',0 | grep \% | perl -pe 's/[^\[]+\[([0-9]+)%.*/\1/')
+    if (( $volume > 66 )); then
+        local icon=$HIGH_ICON
+    elif (( $volume > 33)); then
+        local icon=$MEDIUM_ICON
+    else
+        local icon=$LOW_ICON
+    fi
+    if [[ -f "$WID_FILE" ]]; then
+        local replaces_id="replaces_id = $(cat "$WID_FILE"),"
+    else
+        touch "$WID_FILE"
+        chmod 600 "$WID_FILE"
+        local replaces_id=""
+    fi
+    local new_id=$(echo "return require('naughty').notify({ text = 'Volume: ${volume}%', timeout = 3, $replaces_id icon = '$icon' }).id" | awesome-client | perl -pe 's/[^\d]+//')
+    echo -n $new_id > "$WID_FILE"
+}
+
+function volume_up() {
+    amixer -c 0 sset 'Master',0 2dB+ &>/dev/null
+    notify
+}
+
+function volume_down() {
+    amixer -c 0 sset 'Master',0 2dB- &>/dev/null
+    notify
+}
+
+case $1 in
+    up)
+        volume_up
+        ;;
+    down)
+        volume_down
+        ;;
+esac
